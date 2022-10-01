@@ -80,13 +80,17 @@ void pic_task(void *pvParameter)
     time_t now;
     struct tm *tm_now;
     lv_obj_t * label = lv_label_create(gscr);
+    lv_obj_set_style_bg_color(gscr, lv_color_hex(0x000000), LV_PART_MAIN);
+    
     static lv_style_t font_style;
 	lv_style_init(&font_style);
 	lv_style_set_text_font(&font_style, &lv_font_montserrat_48);
     lv_obj_add_style(label, &font_style,LV_PART_MAIN);
-    lv_obj_align(label, LV_ALIGN_CENTER, 200, 192);
-    lv_obj_set_size(label,800,480); 
-
+    
+    lv_obj_align(label, LV_ALIGN_CENTER, 100, 0);
+    lv_obj_set_size(label,400,100); 
+    
+    lv_label_set_recolor(label, true); 
     sntp_cfg();
 
     while(1) {
@@ -94,7 +98,7 @@ void pic_task(void *pvParameter)
     time(&now);
     tm_now = localtime(&now);
     //lv_img_set_src(gimg, &IMG);
-    lv_label_set_text_fmt(label, "%d-%d-%d\n    %d:%d:%d", tm_now->tm_year+1900, tm_now->tm_mon+1, tm_now->tm_mday, tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec);
+    lv_label_set_text_fmt(label, "#ff0080 %d-%02d-%02d#\n   #00ff80 %02d:%02d:%02d#", tm_now->tm_year+1900, tm_now->tm_mon+1, tm_now->tm_mday, tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec);
   }
 }
 
