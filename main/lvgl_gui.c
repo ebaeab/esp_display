@@ -65,21 +65,36 @@ static void backlight_ledc_init(void)
         .hpoint = 0};
     ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
 }
+
+static void sntp_cfg(void)
+{
+    sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    sntp_setservername(0, "pool.ntp.org");
+    sntp_init();
+    setenv( "TZ", "CST-08", 1 );//设置东八区 北京时间
+    tzset();
+}
+
 void pic_task(void *pvParameter)
 {
-    int d = 0;
-    
+    time_t now;
+    struct tm *tm_now;
+    lv_obj_t * label = lv_label_create(gscr);
+    static lv_style_t font_style;
+	lv_style_init(&font_style);
+	lv_style_set_text_font(&font_style, &lv_font_montserrat_48);
+    lv_obj_add_style(label, &font_style,LV_PART_MAIN);
+    lv_obj_align(label, LV_ALIGN_CENTER, 200, 192);
+    lv_obj_set_size(label,800,480); 
+
+    sntp_cfg();
+
     while(1) {
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    if(d == 0)
-    {
-        lv_img_set_src(gimg, &IMG);
-    }
-    else 
-    {
-        lv_img_set_src(gimg, &IMG);
-    }
-    d=!d;
+    vTaskDelay(pdMS_TO_TICKS(200));
+    time(&now);
+    tm_now = localtime(&now);
+    //lv_img_set_src(gimg, &IMG);
+    lv_label_set_text_fmt(label, "%d-%d-%d\n    %d:%d:%d", tm_now->tm_year+1900, tm_now->tm_mon+1, tm_now->tm_mday, tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec);
   }
 }
 

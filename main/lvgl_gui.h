@@ -1,11 +1,13 @@
 #pragma once
 
 #include <stdio.h>
+#include <sys/time.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
 #include "freertos/semphr.h"
 #include "esp_timer.h"
+#include "esp_sntp.h"
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_vendor.h"
 #include "esp_lcd_panel_ops.h"
