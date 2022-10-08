@@ -5,7 +5,7 @@ static const char *TAG = "lvgl_gui";
 lv_obj_t *gscr;
 lv_obj_t *gimg;
 extern EventGroupHandle_t s_gui_event_group;
-SemaphoreHandle_t xGuiSemaphore;
+//SemaphoreHandle_t xGuiSemaphore;
 
 lv_img_dsc_t IMG = {
     .header.cf = LV_IMG_CF_TRUE_COLOR,
@@ -104,7 +104,7 @@ void pic_task(void *pvParameter)
 
 void guiTask(void *pvParameter)
 {
-    xGuiSemaphore = xSemaphoreCreateMutex();
+    //xGuiSemaphore = xSemaphoreCreateMutex();
     static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
     static lv_disp_drv_t disp_drv;      // contains callback functions
 
@@ -232,10 +232,10 @@ void guiTask(void *pvParameter)
     while (1)
     {
         vTaskDelay(pdMS_TO_TICKS(10));
-        if (pdTRUE == xSemaphoreTake(xGuiSemaphore, portMAX_DELAY))
+        //if (pdTRUE == xSemaphoreTake(xGuiSemaphore, portMAX_DELAY))
         {
             lv_timer_handler();
-            xSemaphoreGive(xGuiSemaphore);
+            //xSemaphoreGive(xGuiSemaphore);
         }
     }
 }
