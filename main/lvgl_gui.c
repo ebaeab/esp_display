@@ -69,7 +69,7 @@ static void backlight_ledc_init(void)
 static void sntp_cfg(void)
 {
     sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    sntp_setservername(0, "pool.ntp.org");
+    sntp_setservername(0, "ntp.aliyun.com");
     sntp_init();
     setenv( "TZ", "CST-08", 1 );//设置东八区 北京时间
     tzset();
