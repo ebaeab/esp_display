@@ -5,7 +5,7 @@ static const char *TAG = "lvgl_gui";
 lv_obj_t *gscr;
 lv_obj_t *gimg;
 extern EventGroupHandle_t s_gui_event_group;
-//SemaphoreHandle_t xGuiSemaphore;
+SemaphoreHandle_t xGuiSemaphore;
 
 lv_img_dsc_t IMG = {
     .header.cf = LV_IMG_CF_TRUE_COLOR,
@@ -97,14 +97,18 @@ void pic_task(void *pvParameter)
     vTaskDelay(pdMS_TO_TICKS(200));
     time(&now);
     tm_now = localtime(&now);
-    //lv_img_set_src(gimg, &IMG);
-    lv_label_set_text_fmt(label, "#ff0080 %d-%02d-%02d#\n   #00ff80 %02d:%02d:%02d#", tm_now->tm_year+1900, tm_now->tm_mon+1, tm_now->tm_mday, tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec);
+    if (pdTRUE == xSemaphoreTake(xGuiSemaphore, portMAX_DELAY))
+    {
+        //lv_img_set_src(gimg, &IMG);
+        lv_label_set_text_fmt(label, "#ff0080 %d-%02d-%02d#\n   #00ff80 %02d:%02d:%02d#", tm_now->tm_year+1900, tm_now->tm_mon+1, tm_now->tm_mday, tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec);
+        xSemaphoreGive(xGuiSemaphore);
+    }
   }
 }
 
 void guiTask(void *pvParameter)
 {
-    //xGuiSemaphore = xSemaphoreCreateMutex();
+    xGuiSemaphore = xSemaphoreCreateMutex();
     static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
     static lv_disp_drv_t disp_drv;      // contains callback functions
 
@@ -232,10 +236,10 @@ void guiTask(void *pvParameter)
     while (1)
     {
         vTaskDelay(pdMS_TO_TICKS(10));
-        //if (pdTRUE == xSemaphoreTake(xGuiSemaphore, portMAX_DELAY))
+        if (pdTRUE == xSemaphoreTake(xGuiSemaphore, portMAX_DELAY))
         {
             lv_timer_handler();
-            //xSemaphoreGive(xGuiSemaphore);
+            xSemaphoreGive(xGuiSemaphore);
         }
     }
 }
