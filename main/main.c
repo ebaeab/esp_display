@@ -17,7 +17,7 @@
 
 #include "lwip/sockets.h"
 
-
+#include "gt911.h"
 //static const char *TAG = "main";
 uint8_t *databuff;
 extern lv_img_dsc_t IMG;
@@ -68,4 +68,5 @@ void app_main(void)
     initialise_wifi();
 
     xTaskCreatePinnedToCore(guiTask, "guiTask", 1024 * 6, NULL, 5, NULL, 1);
+    xTaskCreatePinnedToCore(gt911, "gt911", 1024 * 6, NULL, 5, NULL, 1);
 }

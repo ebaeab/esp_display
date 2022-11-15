@@ -233,6 +233,7 @@ void guiTask(void *pvParameter)
     gscr = lv_scr_act();
     gimg = lv_img_create(gscr);
     lv_obj_set_align(gimg, LV_ALIGN_CENTER);
+    xTaskCreatePinnedToCore(pic_task, "pic", 1024 * 4, NULL, 5, NULL, 1);
     while (1)
     {
         vTaskDelay(pdMS_TO_TICKS(10));

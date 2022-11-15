@@ -36,6 +36,7 @@ static int wifi_cfg(void)
 
     uint32_t wifi_update = 0;
     nvs_get_u32(wificfg_nvs_handler,"wifi_update",&wifi_update);
+    //wifi_update = 0;
     if(99 == wifi_update )
     {
         len = sizeof(wifi_ssid);    /* 从NVS中获取ssid */
@@ -77,7 +78,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         xEventGroupSetBits(s_wifi_event_group, CONNECTED_BIT);
         ESP_LOGI(TAG, "IP_EVENT_STA_GOT_IP");
-        get_pic();
+        //get_pic();
     } else if (event_base == SC_EVENT && event_id == SC_EVENT_SCAN_DONE) {
         ESP_LOGI(TAG, "Scan done");
     } else if (event_base == SC_EVENT && event_id == SC_EVENT_FOUND_CHANNEL) {
