@@ -1,11 +1,15 @@
 #include "lvgl_gui.h"
-//#include "hy.h"
-//#include "zf.h"
+#include "lv_port_indev.h"
+
 static const char *TAG = "lvgl_gui";
 lv_obj_t *gscr;
 lv_obj_t *gimg;
+lv_obj_t *glabel;
 extern EventGroupHandle_t s_gui_event_group;
 SemaphoreHandle_t xGuiSemaphore;
+
+extern uint16_t px;
+extern uint16_t py;
 
 lv_img_dsc_t IMG = {
     .header.cf = LV_IMG_CF_TRUE_COLOR,
@@ -91,19 +95,44 @@ void pic_task(void *pvParameter)
     lv_obj_set_size(label,400,100); 
     
     lv_label_set_recolor(label, true); 
-    sntp_cfg();
+    //sntp_cfg();
 
     while(1) {
-    vTaskDelay(pdMS_TO_TICKS(200));
-    time(&now);
-    tm_now = localtime(&now);
+    vTaskDelay(pdMS_TO_TICKS(20));
+    //time(&now);
+    //tm_now = localtime(&now);
     if (pdTRUE == xSemaphoreTake(xGuiSemaphore, portMAX_DELAY))
     {
         //lv_img_set_src(gimg, &IMG);
-        lv_label_set_text_fmt(label, "#ff0080 %d-%02d-%02d#\n   #00ff80 %02d:%02d:%02d#", tm_now->tm_year+1900, tm_now->tm_mon+1, tm_now->tm_mday, tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec);
+        //lv_label_set_text_fmt(label, "#ff0080 %d-%02d-%02d#\n   #00ff80 %02d:%02d:%02d#", tm_now->tm_year+1900, tm_now->tm_mon+1, tm_now->tm_mday, tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec);
+        lv_label_set_text_fmt(label, "#ff0080 %d %d", px, py);
         xSemaphoreGive(xGuiSemaphore);
     }
   }
+}
+
+static void btn_event_cb(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t *btn = lv_event_get_target(e);
+
+    if(code == LV_EVENT_CLICKED)
+    {
+        lv_obj_t *label = lv_obj_get_child(btn,0);
+        //lv_label_set_text_fmt(label, "%d %d", px, py);
+    }
+}
+
+void lv_btn_test(void)
+{
+    lv_obj_t * btn = lv_btn_create(lv_scr_act());
+    lv_obj_set_pos(btn, 0,0);
+    lv_obj_set_size(btn, 800,480);
+    lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_ALL, NULL);
+
+    glabel = lv_label_create(btn);
+    lv_label_set_text(glabel, "Btn");
+    lv_obj_center(glabel);
 }
 
 void guiTask(void *pvParameter)
@@ -233,6 +262,9 @@ void guiTask(void *pvParameter)
     gscr = lv_scr_act();
     gimg = lv_img_create(gscr);
     lv_obj_set_align(gimg, LV_ALIGN_CENTER);
+
+    lv_port_indev_init();
+    //lv_btn_test();
     xTaskCreatePinnedToCore(pic_task, "pic", 1024 * 4, NULL, 5, NULL, 1);
     while (1)
     {

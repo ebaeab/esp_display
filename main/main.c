@@ -1,22 +1,19 @@
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "esp_vfs_fat.h"
 #include "sdmmc_cmd.h"
 #include "driver/sdmmc_host.h"
-
+#include "driver/gpio.h"
 #include "lvgl_gui.h"
 #include "smart.h"
-
 #include "esp_wifi.h"
-
 #include <string.h>
-
 #include "esp_log.h"
 #include "esp_event.h"
 #include "nvs_flash.h"
-
 #include "lwip/sockets.h"
-
 #include "gt911.h"
 //static const char *TAG = "main";
 uint8_t *databuff;
@@ -27,8 +24,8 @@ extern lv_img_dsc_t IMG;
 int get_pic(void)
 {
     int err = 0;
-    int sockfd;
-    int len = 0;
+    //int sockfd;
+    //int len = 0;
 /*
     sockfd = socket(AF_INET,SOCK_STREAM,0);
 
@@ -64,9 +61,10 @@ void app_main(void)
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
     }
+    
     ESP_ERROR_CHECK( ret );
     initialise_wifi();
-
-    xTaskCreatePinnedToCore(guiTask, "guiTask", 1024 * 6, NULL, 5, NULL, 1);
     xTaskCreatePinnedToCore(gt911, "gt911", 1024 * 6, NULL, 5, NULL, 1);
+    xTaskCreatePinnedToCore(guiTask, "guiTask", 1024 * 6, NULL, 5, NULL, 1);
+    //gpio_init();
 }

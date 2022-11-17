@@ -17,7 +17,7 @@ static const char *TAG = "GT9XX";
 
 bool GT9xx_Class::probe(void)
 {
-    uint8_t config0[] = {
+  /* uint8_t config0[] = {
         0x00,0xE0,0x01,0x20,0x03,0x05,0x04,0x10,0x01,0xC8,
         0x28,0x0F,0x50,0x32,0x03,0x05,0x00,0x00,0x00,0x00,
         0x11,0x11,0x05,0x18,0x1A,0x1E,0x14,0x88,0x29,0x0A,
@@ -38,28 +38,28 @@ bool GT9xx_Class::probe(void)
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
         0xFF,0xFF,0xFF,0xFF,0x0B,0x01
         };
-
+*/ 
     softReset();
 
     uint8_t buffer[5] = {0};
     readBytes(GT9XX_PRODUCT_ID, buffer, 3);
     buffer[3] = readRegister(GT9XX_CONFIG_VERSION);
 
-    ESP_LOGE(TAG, "TouchPad_ID:%c,%c,%c\r\nTouchPad_Config_Version:%2x\r\n", buffer[0], buffer[1], buffer[2], buffer[3]);
+    ESP_LOGI(TAG, "TouchPad_ID:%c,%c,%c\r\nTouchPad_Config_Version:%2x\r\n", buffer[0], buffer[1], buffer[2], buffer[3]);
     if(buffer[0] == '9'){
         initialization = true;
     }else{
         initialization = false;
         return false;
     }
-
+/*
     uint8_t check_sum = 0;
     for (int i = 0; i < (sizeof(config0) - 2); i++) {
         check_sum += config0[i];
     }
     config0[184] = (~check_sum) + 1;
     writeBytes(GT9XX_CONFIG, config0, sizeof(config0));
-
+*/
     return true;
 }
 
@@ -149,18 +149,18 @@ uint8_t GT9xx_Class::scanPoint()
         return 0;
     }
 
-    data[0].y = ((uint16_t)buffer[3] << 8) + buffer[2];
+    data[0].y = 480 - ((uint16_t)buffer[3] << 8) - buffer[2];
     data[0].x = ((uint16_t)buffer[5] << 8) + buffer[4];
-
-    if (data[0].x >= 400)
+/*
+    if (data[0].x > 400)
     {
-        data[0].x -= 400;
+        data[0].x -= 447;
     }
-    else if (data[0].x < 400)
+    else if (data[0].x <= 400)
     {
-        data[0].x += 400;
+        data[0].x += 353;
     }
-
+*/
 
     data[1].y = ((uint16_t)buffer[11] << 8) + buffer[10];
     data[1].x = ((uint16_t)buffer[13] << 8) + buffer[12];
