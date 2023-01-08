@@ -1,6 +1,6 @@
 #include "lvgl_gui.h"
 #include "lv_port_indev.h"
-
+#include "lv_demo_widgets.h"
 static const char *TAG = "lvgl_gui";
 lv_obj_t *gscr;
 lv_obj_t *gimg;
@@ -217,23 +217,24 @@ void guiTask(void *pvParameter)
     // it's recommended to choose the size of the draw buffer(s) to be at least 1/10 screen sized
     lv_color_t *buf1 = NULL;
     lv_color_t *buf2 = NULL;
-    // buf1 = heap_caps_aligned_alloc(PSRAM_DATA_ALIGNMENT, LCD_H_RES * 480 * sizeof(lv_color_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-    // buf2 = heap_caps_aligned_alloc(PSRAM_DATA_ALIGNMENT, LCD_H_RES * 480 * sizeof(lv_color_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    buf1 = heap_caps_aligned_alloc(PSRAM_DATA_ALIGNMENT, LCD_V_RES * 100 * sizeof(lv_color_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    buf2 = heap_caps_aligned_alloc(PSRAM_DATA_ALIGNMENT, LCD_V_RES * 100 * sizeof(lv_color_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 
-    buf1 = heap_caps_malloc(LCD_V_RES * 50 * sizeof(lv_color_t), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
-    buf2 = heap_caps_malloc(LCD_V_RES * 50 * sizeof(lv_color_t), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    //buf1 = heap_caps_malloc(LCD_V_RES * 80 * sizeof(lv_color_t), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    //buf2 = heap_caps_malloc(LCD_V_RES * 80 * sizeof(lv_color_t), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
 
     assert(buf1);
     assert(buf2);
     ESP_LOGI(TAG, "buf1@%p, buf2@%p", buf1, buf2);
     // initialize LVGL draw buffers
-    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, LCD_V_RES * 50);
+    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, LCD_V_RES * 100 );
 
     ESP_LOGI(TAG, "Register display driver to LVGL");
     lv_disp_drv_init(&disp_drv);
     disp_drv.hor_res = LCD_H_RES;
     disp_drv.ver_res = LCD_V_RES;
     disp_drv.flush_cb = lvgl_flush_cb;
+    //disp_drv.full_refresh = 1;
     disp_drv.draw_buf = &disp_buf;
     disp_drv.user_data = panel_handle;
     // lv_disp_t *disp = lv_disp_drv_register(&disp_drv);
@@ -258,21 +259,22 @@ void guiTask(void *pvParameter)
     lv_timer_handler();
 
     ESP_LOGI(TAG, "Display LVGL animation");
-
+/*
     gscr = lv_scr_act();
     gimg = lv_img_create(gscr);
     lv_obj_set_align(gimg, LV_ALIGN_CENTER);
-
+ */
     lv_port_indev_init();
     //lv_btn_test();
-    xTaskCreatePinnedToCore(pic_task, "pic", 1024 * 4, NULL, 5, NULL, 1);
+   // xTaskCreatePinnedToCore(pic_task, "pic", 1024 * 4, NULL, 5, NULL, 1);
+   lv_demo_widgets();
     while (1)
     {
-        vTaskDelay(pdMS_TO_TICKS(10));
-        if (pdTRUE == xSemaphoreTake(xGuiSemaphore, portMAX_DELAY))
+        vTaskDelay(pdMS_TO_TICKS(1));
+        //if (pdTRUE == xSemaphoreTake(xGuiSemaphore, portMAX_DELAY))
         {
             lv_timer_handler();
-            xSemaphoreGive(xGuiSemaphore);
+            //xSemaphoreGive(xGuiSemaphore);
         }
     }
 }

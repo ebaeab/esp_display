@@ -1,5 +1,4 @@
 # ESP-IDF component file for make based commands
-
 COMPONENT_SRCDIRS := . \
                   src \
                   src/core \
@@ -29,6 +28,4 @@ COMPONENT_SRCDIRS := . \
                   src/extra/widgets/tabview \
                   src/extra/widgets/tileview \
                   src/extra/widgets/win
-
-
 COMPONENT_ADD_INCLUDEDIRS := $(COMPONENT_SRCDIRS) .

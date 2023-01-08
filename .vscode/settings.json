@@ -3,12 +3,15 @@
     "cmake.configureOnOpen": false,
     "idf.flashType": "UART",
     "idf.port": "/dev/ttyUSB0",
-    "idf.portWin": "COM99",
+    "idf.portWin": "COM17",
     "files.associations": {
         "dpp.h": "c",
         "lvgl_gui.h": "c",
         "lv_font.h": "c",
         "lvgl.h": "c",
-        "lv_demos.h": "c"
+        "lv_demos.h": "c",
+        "lv_example_anim.h": "c",
+        "lv_examples.h": "c",
+        "sdkconfig.h": "c"
     }
 }
