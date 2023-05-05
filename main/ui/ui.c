@@ -53,6 +53,8 @@ LV_IMG_DECLARE(img_cold);
 LV_IMG_DECLARE(img_hot);
 LV_IMG_DECLARE(img_unknown);
 
+LV_IMG_DECLARE(h);
+
 static void *weather_table[] = {
     &img_sunny,                   // 0 晴（国内城市白天晴）
     &img_clear,                   // 1 晴（国内城市夜晚晴）
@@ -100,6 +102,9 @@ static const lv_font_t *font_normal;
 
 static lv_obj_t *tv;
 
+static lv_obj_t *label_year;
+static lv_obj_t *label_month;
+static lv_obj_t *label_day;
 static lv_obj_t *label_hour;
 static lv_obj_t *label_min;
 static lv_obj_t *label_sec;
@@ -109,28 +114,24 @@ static lv_obj_t *label_localtion;
 static lv_obj_t *img_weather;
 static lv_obj_t *label_temperature;
 
-static lv_obj_t *cpu_temp;
-static lv_obj_t *mem_used;
-
-static lv_obj_t *upload;
-static lv_obj_t *download;
+static lv_obj_t *img;
 
 static lv_obj_t *page1;
 static lv_obj_t *page2;
+static lv_obj_t *page3;
 static lv_obj_t *page_act;
 
 static void ui_update(lv_timer_t *t);
 static void ui_clock_create(lv_obj_t *parent);
 static void ui_weather_create(lv_obj_t *parent);
+static void ui_img_create(lv_obj_t *parent);
 void *ui_weather_update(void *param);
-
 static void ui_tabview_switch_cb(lv_timer_t *t);
 static void ui_anim_y_cb(void *var, int32_t v);
 
 void ui_init()
 {
 
-    weather_init();
 
     font_normal = &lv_font_montserrat_16;
 
@@ -141,11 +142,13 @@ void ui_init()
     tv = lv_tabview_create(lv_scr_act(), LV_DIR_RIGHT, 0);
     lv_obj_t *t1 = lv_tabview_add_tab(tv, " ");
     lv_obj_t *t2 = lv_tabview_add_tab(tv, " ");
+    lv_obj_t *t3 = lv_tabview_add_tab(tv, " ");
 
     lv_obj_set_style_bg_color(tv, lv_palette_lighten(LV_PALETTE_GREY, 2), 0);
 
     ui_clock_create(t1);
     ui_weather_create(t2);
+    ui_img_create(t3);
 
     page1 = lv_obj_create(lv_scr_act());
     lv_obj_align(page1, LV_ALIGN_RIGHT_MID, -5, -10);
@@ -159,13 +162,19 @@ void ui_init()
     lv_obj_set_style_bg_color(page2, lv_palette_main(LV_PALETTE_GREY), 0);
     lv_obj_set_style_radius(page2, LV_RADIUS_CIRCLE, 0);
 
+    page3 = lv_obj_create(lv_scr_act());
+    lv_obj_align(page3, LV_ALIGN_RIGHT_MID, -5, 30);
+    lv_obj_set_size(page3, 10, 10);
+    lv_obj_set_style_bg_color(page3, lv_palette_main(LV_PALETTE_GREY), 0);
+    lv_obj_set_style_radius(page3, LV_RADIUS_CIRCLE, 0);
+
     page_act = lv_obj_create(lv_scr_act());
     lv_obj_align(page_act, LV_ALIGN_RIGHT_MID, -5, -10);
     lv_obj_set_size(page_act, 10, 10);
     lv_obj_set_style_bg_color(page_act, lv_palette_main(LV_PALETTE_RED), 0);
     lv_obj_set_style_radius(page_act, LV_RADIUS_CIRCLE, 0);
 
-    lv_timer_create(ui_tabview_switch_cb, 5000, NULL);
+    lv_timer_create(ui_tabview_switch_cb, 3000, NULL);
 
     lv_timer_create(ui_update, 50, NULL);
 }
@@ -206,6 +215,7 @@ static void ui_update(lv_timer_t *t)
         }
 
         toggle = !toggle;
+
     }
 
     last_date = *now_date;
@@ -219,6 +229,21 @@ static void ui_clock_create(lv_obj_t *parent)
     time(&now_time);
     now_date = localtime(&now_time);
 
+    label_year = lv_label_create(parent);
+    lv_obj_set_style_text_font(label_year, &lv_font_montserrat_24, 0);
+    lv_obj_align(label_year, LV_ALIGN_CENTER, -30, -50);
+    lv_label_set_text_fmt(label_year, "%d-", now_date->tm_year + 1900);
+
+    label_month = lv_label_create(parent);
+    lv_obj_set_style_text_font(label_month, &lv_font_montserrat_24, 0);
+    lv_obj_align(label_month, LV_ALIGN_CENTER, 25, -50);
+    lv_label_set_text_fmt(label_month, "%02d-", now_date->tm_mon + 1);
+
+    label_day = lv_label_create(parent);
+    lv_obj_set_style_text_font(label_day, &lv_font_montserrat_24, 0);
+    lv_obj_align(label_day, LV_ALIGN_CENTER, 60, -50);
+    lv_label_set_text_fmt(label_day, "%02d", now_date->tm_mday);
+
     label_hour = lv_label_create(parent);
     lv_obj_set_style_text_font(label_hour, &lv_font_montserrat_48, 0);
     lv_obj_align(label_hour, LV_ALIGN_CENTER, -70, 0);
@@ -227,16 +252,22 @@ static void ui_clock_create(lv_obj_t *parent)
     label_dot = lv_label_create(parent);
     lv_obj_set_style_text_font(label_dot, &lv_font_montserrat_48, 0);
     lv_obj_align(label_dot, LV_ALIGN_CENTER, -25, -3);
-    lv_label_set_text(label_dot, ":");
+    lv_label_set_text(label_dot, "      :      :");
 
     label_min = lv_label_create(parent);
     lv_obj_set_style_text_font(label_min, &lv_font_montserrat_48, 0);
     lv_obj_align(label_min, LV_ALIGN_CENTER, 20, 0);
     lv_label_set_text_fmt(label_min, "%02d", now_date->tm_min);
+    
+    static lv_style_t style;
+    lv_style_init(&style);
+    lv_style_set_text_color(&style,lv_palette_main(LV_PALETTE_RED));
 
     label_sec = lv_label_create(parent);
-    lv_obj_set_style_text_font(label_sec, &lv_font_montserrat_24, 0);
-    lv_obj_align(label_sec, LV_ALIGN_CENTER, 75, 8);
+    lv_obj_add_style(label_sec,&style,0); 
+
+    lv_obj_set_style_text_font(label_sec, &lv_font_montserrat_48, 0);
+    lv_obj_align(label_sec, LV_ALIGN_CENTER, 100, 0);
     lv_label_set_text_fmt(label_sec, "%02d", now_date->tm_sec);
 }
 
@@ -266,6 +297,13 @@ static void ui_weather_create(lv_obj_t *parent)
     pthread_create(&thread, &attr, ui_weather_update, 0);
 }
 
+static void ui_img_create(lv_obj_t *parent)
+{
+    img = lv_img_create(parent);
+    lv_obj_align(img, LV_ALIGN_CENTER, 0, 0);
+    lv_img_set_src(img, &h);
+}
+
 void *ui_weather_update(void *param)
 {
     weather_data_t *data = NULL;
@@ -273,6 +311,7 @@ void *ui_weather_update(void *param)
     while (1)
     {
         data = weather_data_upate();
+
         if (data != NULL)
         {
             if (data->code >= 0 && data->code <= MAX_WEATHER_CODE)
@@ -287,13 +326,7 @@ void *ui_weather_update(void *param)
             lv_label_set_text_fmt(label_localtion, "%s", data->location);
             lv_label_set_text_fmt(label_temperature, "%d °C", data->temp);
 
-            printf("next update:after 1hour\r\n");
-            sleep(60 * 60);
-        }
-        else
-        {
-            printf("next update:after 1min\r\n");
-            sleep(60);
+            sleep(1);
         }
     }
 
@@ -316,11 +349,14 @@ static void ui_tabview_switch_cb(lv_timer_t *t)
     switch (next_tab_idx)
     {
     case 0:
-        lv_anim_set_values(&a, 10, -10);
+        lv_anim_set_values(&a, 30, -10);
         break;
 
     case 1:
         lv_anim_set_values(&a, -10, 10);
+        break;
+    case 2:
+        lv_anim_set_values(&a, 10, 30);
         break;
 
     default:
@@ -335,5 +371,5 @@ static void ui_tabview_switch_cb(lv_timer_t *t)
 
     lv_tabview_set_act(tv, next_tab_idx, true);
 
-    next_tab_idx = (next_tab_idx + 1) % 2;
+    next_tab_idx = (next_tab_idx + 1) % 3;
 }

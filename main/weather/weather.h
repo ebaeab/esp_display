@@ -60,7 +60,6 @@ extern "C"
         int temp;
     } weather_data_t;
 
-    void weather_init(void);
     weather_data_t *weather_data_upate(void);
 
 #ifdef __cplusplus
