@@ -3,7 +3,7 @@
     "cmake.configureOnOpen": false,
     "idf.flashType": "UART",
     "idf.port": "/dev/ttyUSB0",
-    "idf.portWin": "COM17",
+    "idf.portWin": "COM32",
     "files.associations": {
         "dpp.h": "c",
         "lvgl_gui.h": "c",
@@ -13,5 +13,6 @@
         "lv_example_anim.h": "c",
         "lv_examples.h": "c",
         "sdkconfig.h": "c"
-    }
+    },
+    "RTT_Studio.Build.Parallel_Jobs": "8"
 }

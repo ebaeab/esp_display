@@ -64,7 +64,7 @@ void app_main(void)
     
     ESP_ERROR_CHECK( ret );
     //initialise_wifi();
-    xTaskCreatePinnedToCore(gt911, "gt911", 1024 * 6, NULL, 5, NULL, 1);
+    //xTaskCreatePinnedToCore(gt911, "gt911", 1024 * 6, NULL, 5, NULL, 1);
     xTaskCreatePinnedToCore(guiTask, "guiTask", 1024 * 6, NULL, 5, NULL, 1);
     //gpio_init();
 }

@@ -1,6 +1,7 @@
 #include "lvgl_gui.h"
 #include "lv_port_indev.h"
 #include "lv_demo_widgets.h"
+#include "ui/ui.h"
 static const char *TAG = "lvgl_gui";
 lv_obj_t *gscr;
 lv_obj_t *gimg;
@@ -264,10 +265,11 @@ void guiTask(void *pvParameter)
     gimg = lv_img_create(gscr);
     lv_obj_set_align(gimg, LV_ALIGN_CENTER);
  */
-    lv_port_indev_init();
+    //lv_port_indev_init();
     //lv_btn_test();
    // xTaskCreatePinnedToCore(pic_task, "pic", 1024 * 4, NULL, 5, NULL, 1);
-   lv_demo_widgets();
+   //lv_demo_widgets();
+   ui_init();
     while (1)
     {
         vTaskDelay(pdMS_TO_TICKS(1));
