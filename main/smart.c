@@ -64,6 +64,8 @@ static int wifi_cfg(void)
     return ret;
 }
 
+extern void sntp_cfg(void);
+
 static void event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
 {
@@ -73,12 +75,21 @@ static void event_handler(void* arg, esp_event_base_t event_base,
             xTaskCreate(smartconfig_example_task, "smartconfig_example_task", 4096, NULL, 3, NULL);
         }
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        esp_wifi_connect();
-        xEventGroupClearBits(s_wifi_event_group, CONNECTED_BIT);
+        wifi_event_sta_disconnected_t *disconnected = (wifi_event_sta_disconnected_t*) event_data;
+        if (disconnected->reason == WIFI_REASON_NO_AP_FOUND)
+        {
+            xTaskCreate(smartconfig_example_task, "smartconfig_example_task", 4096, NULL, 3, NULL);
+        }
+        else
+        {
+            esp_wifi_connect();
+            xEventGroupClearBits(s_wifi_event_group, CONNECTED_BIT);
+        }   
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         xEventGroupSetBits(s_wifi_event_group, CONNECTED_BIT);
         ESP_LOGI(TAG, "IP_EVENT_STA_GOT_IP");
         //get_pic();
+        sntp_cfg();
     } else if (event_base == SC_EVENT && event_id == SC_EVENT_SCAN_DONE) {
         ESP_LOGI(TAG, "Scan done");
     } else if (event_base == SC_EVENT && event_id == SC_EVENT_FOUND_CHANNEL) {

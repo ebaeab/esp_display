@@ -193,7 +193,7 @@ static void ui_update(lv_timer_t *t)
 
     if (now_date->tm_hour != last_date.tm_hour)
     {
-        lv_label_set_text_fmt(label_hour, "%2d", now_date->tm_hour);
+        lv_label_set_text_fmt(label_hour, "%02d", now_date->tm_hour);
     }
 
     if (now_date->tm_min != last_date.tm_min)
@@ -216,6 +216,19 @@ static void ui_update(lv_timer_t *t)
 
         toggle = !toggle;
 
+    }
+
+    if (now_date->tm_mday != last_date.tm_mday)
+    {
+        lv_label_set_text_fmt(label_day, "%02d", now_date->tm_mday);
+    }
+    if (now_date->tm_mon != last_date.tm_mon)
+    {
+        lv_label_set_text_fmt(label_month, "%02d-", now_date->tm_mon + 1);
+    }
+    if (now_date->tm_year != last_date.tm_year)
+    {
+        lv_label_set_text_fmt(label_year, "%d-", now_date->tm_year + 1900);
     }
 
     last_date = *now_date;
@@ -247,7 +260,7 @@ static void ui_clock_create(lv_obj_t *parent)
     label_hour = lv_label_create(parent);
     lv_obj_set_style_text_font(label_hour, &lv_font_montserrat_48, 0);
     lv_obj_align(label_hour, LV_ALIGN_CENTER, -70, 0);
-    lv_label_set_text_fmt(label_hour, "%2d", now_date->tm_hour);
+    lv_label_set_text_fmt(label_hour, "%02d", now_date->tm_hour);
 
     label_dot = lv_label_create(parent);
     lv_obj_set_style_text_font(label_dot, &lv_font_montserrat_48, 0);
@@ -302,6 +315,7 @@ static void ui_img_create(lv_obj_t *parent)
     img = lv_img_create(parent);
     lv_obj_align(img, LV_ALIGN_CENTER, 0, 0);
     lv_img_set_src(img, &h);
+    lv_obj_set_scrollbar_mode(parent, LV_SCROLLBAR_MODE_OFF);
 }
 
 void *ui_weather_update(void *param)

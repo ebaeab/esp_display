@@ -9,7 +9,7 @@
 #include <time.h>
 
 
-static weather_data_t weather_data = {.code = 38, .location="xian", .text="hot", .temp = 25};
+static weather_data_t weather_data = {.code = 38, .location="西安", .text="hot", .temp = 25};
 
 weather_data_t *weather_data_upate()
 {

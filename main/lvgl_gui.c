@@ -71,7 +71,7 @@ static void backlight_ledc_init(void)
     ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
 }
 
-static void sntp_cfg(void)
+void sntp_cfg(void)
 {
     sntp_setoperatingmode(SNTP_OPMODE_POLL);
     sntp_setservername(0, "ntp.aliyun.com");
@@ -82,8 +82,8 @@ static void sntp_cfg(void)
 
 void pic_task(void *pvParameter)
 {
-    time_t now;
-    struct tm *tm_now;
+    //time_t now;
+    //struct tm *tm_now;
     lv_obj_t * label = lv_label_create(gscr);
     lv_obj_set_style_bg_color(gscr, lv_color_hex(0x000000), LV_PART_MAIN);
     
@@ -96,7 +96,6 @@ void pic_task(void *pvParameter)
     lv_obj_set_size(label,400,100); 
     
     lv_label_set_recolor(label, true); 
-    //sntp_cfg();
 
     while(1) {
     vTaskDelay(pdMS_TO_TICKS(20));
