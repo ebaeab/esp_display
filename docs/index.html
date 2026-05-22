@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESP32-S3 Display Project</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg-primary: #0a0e17;
+    --bg-secondary: #111827;
+    --bg-card: #151d2e;
+    --accent-cyan: #00f0ff;
+    --accent-blue: #3b82f6;
+    --accent-purple: #8b5cf6;
+    --accent-green: #00ff88;
+    --accent-orange: #f59e0b;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --border-glow: rgba(0, 240, 255, 0.15);
+    --glow-cyan: 0 0 20px rgba(0, 240, 255, 0.3);
+    --glow-purple: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Rajdhani', 'Noto Sans SC', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  /* Animated grid background */
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .grid-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(0, 240, 255, 0.08) 0%, transparent 60%);
+  }
+
+  /* Floating particles */
+  .particles {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: var(--accent-cyan);
+    border-radius: 50%;
+    animation: float-up linear infinite;
+    opacity: 0;
+  }
+
+  @keyframes float-up {
+    0% { transform: translateY(100vh) scale(0); opacity: 0; }
+    10% { opacity: 0.8; }
+    90% { opacity: 0.8; }
+    100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Hero Section */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    padding: 80px 24px;
+  }
+
+  .hero-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border: 1px solid var(--accent-cyan);
+    border-radius: 999px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    color: var(--accent-cyan);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    background: rgba(0, 240, 255, 0.05);
+    animation: pulse-border 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse-border {
+    0%, 100% { box-shadow: 0 0 5px rgba(0, 240, 255, 0.2); }
+    50% { box-shadow: 0 0 20px rgba(0, 240, 255, 0.4); }
+  }
+
+  .hero-chip .dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent-green);
+    border-radius: 50%;
+    animation: blink 1.5s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .hero h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 900;
+    letter-spacing: 4px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero h1 span {
+    display: block;
+    font-size: 0.5em;
+    font-weight: 400;
+    letter-spacing: 8px;
+    -webkit-text-fill-color: var(--text-secondary);
+    margin-top: 8px;
+  }
+
+  .hero-desc {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 24px auto 48px;
+    font-weight: 300;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 48px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    text-shadow: var(--glow-cyan);
+  }
+
+  .stat-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 4px;
+  }
+
+  .scroll-indicator {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    animation: bounce 2s ease-in-out infinite;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(8px); }
+  }
+
+  .scroll-indicator .arrow {
+    width: 20px;
+    height: 20px;
+    border-right: 2px solid var(--accent-cyan);
+    border-bottom: 2px solid var(--accent-cyan);
+    transform: rotate(45deg);
+  }
+
+  /* Section styling */
+  section {
+    padding: 100px 0;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 64px;
+  }
+
+  .section-tag {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    color: var(--accent-purple);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-weight: 700;
+    letter-spacing: 2px;
+  }
+
+  .section-line {
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+    margin: 16px auto 0;
+    box-shadow: var(--glow-cyan);
+  }
+
+  /* Architecture cards */
+  .arch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+  }
+
+  .arch-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-glow);
+    border-radius: 12px;
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .arch-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .arch-card:hover {
+    border-color: rgba(0, 240, 255, 0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), var(--glow-cyan);
+  }
+
+  .arch-card:hover::before {
+    opacity: 1;
+  }
+
+  .card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    border: 1px solid;
+  }
+
+  .card-icon.cyan { background: rgba(0, 240, 255, 0.1); border-color: rgba(0, 240, 255, 0.2); color: var(--accent-cyan); }
+  .card-icon.purple { background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.2); color: var(--accent-purple); }
+  .card-icon.green { background: rgba(0, 255, 136, 0.1); border-color: rgba(0, 255, 136, 0.2); color: var(--accent-green); }
+  .card-icon.blue { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); color: var(--accent-blue); }
+  .card-icon.orange { background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.2); color: var(--accent-orange); }
+
+  .card-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .card-subtitle {
+    font-size: 0.8rem;
+    color: var(--accent-cyan);
+    font-family: 'Orbitron', monospace;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    opacity: 0.7;
+  }
+
+  .card-desc {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.7;
+  }
+
+  /* Pin Table */
+  .pin-section {
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    padding: 48px;
+    border: 1px solid var(--border-glow);
+  }
+
+  .pin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 32px;
+    margin-top: 32px;
+  }
+
+  .pin-group h3 {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem;
+    color: var(--accent-cyan);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pin-group h3::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--accent-cyan);
+    border-radius: 50%;
+    box-shadow: var(--glow-cyan);
+  }
+
+  .pin-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: rgba(0, 240, 255, 0.03);
+    border: 1px solid rgba(0, 240, 255, 0.06);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-family: 'Rajdhani', monospace;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+  }
+
+  .pin-item:hover {
+    border-color: rgba(0, 240, 255, 0.2);
+    background: rgba(0, 240, 255, 0.06);
+  }
+
+  .pin-name {
+    color: var(--text-secondary);
+  }
+
+  .pin-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.8rem;
+    color: var(--accent-green);
+    padding: 2px 10px;
+    background: rgba(0, 255, 136, 0.08);
+    border-radius: 4px;
+    border: 1px solid rgba(0, 255, 136, 0.15);
+  }
+
+  /* Boot sequence */
+  .boot-sequence {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .boot-step {
+    display: flex;
+    gap: 24px;
+    position: relative;
+  }
+
+  .boot-marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .boot-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--accent-cyan);
+    background: var(--bg-primary);
+    position: relative;
+    z-index: 1;
+  }
+
+  .boot-dot.active {
+    background: var(--accent-cyan);
+    box-shadow: var(--glow-cyan);
+  }
+
+  .boot-line {
+    width: 2px;
+    flex: 1;
+    background: linear-gradient(to bottom, var(--accent-cyan), rgba(0, 240, 255, 0.1));
+    min-height: 40px;
+  }
+
+  .boot-content {
+    padding-bottom: 40px;
+  }
+
+  .boot-step-num {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    color: var(--accent-purple);
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+
+  .boot-step-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .boot-step-desc {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  .boot-step:last-child .boot-line { display: none; }
+
+  /* Tech specs */
+  .specs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+  }
+
+  .spec-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border-glow);
+    border-radius: 12px;
+    padding: 28px;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  .spec-item:hover {
+    border-color: rgba(139, 92, 246, 0.3);
+    box-shadow: var(--glow-purple);
+  }
+
+  .spec-icon {
+    font-size: 2rem;
+    margin-bottom: 12px;
+  }
+
+  .spec-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .spec-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent-purple);
+  }
+
+  /* Terminal-style code block */
+  .terminal {
+    background: #0d1117;
+    border: 1px solid rgba(0, 240, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 700px;
+    margin: 48px auto 0;
+  }
+
+  .terminal-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: rgba(0, 240, 255, 0.03);
+    border-bottom: 1px solid rgba(0, 240, 255, 0.06);
+  }
+
+  .terminal-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .terminal-dot.r { background: #ff5f57; }
+  .terminal-dot.y { background: #febc2e; }
+  .terminal-dot.g { background: #28c840; }
+
+  .terminal-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+    margin-left: 8px;
+  }
+
+  .terminal-body {
+    padding: 20px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    line-height: 1.8;
+  }
+
+  .terminal-body .prompt {
+    color: var(--accent-green);
+  }
+
+  .terminal-body .cmd {
+    color: var(--accent-cyan);
+  }
+
+  .terminal-body .comment {
+    color: #6b7280;
+  }
+
+  .terminal-body .output {
+    color: var(--text-secondary);
+  }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 48px 24px;
+    border-top: 1px solid var(--border-glow);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+  }
+
+  footer a {
+    color: var(--accent-cyan);
+    text-decoration: none;
+  }
+
+  footer a:hover {
+    text-shadow: var(--glow-cyan);
+  }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-glow), transparent);
+    margin: 0;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .hero { padding: 60px 16px; }
+    .hero-stats { gap: 24px; }
+    .pin-section { padding: 32px 20px; }
+    section { padding: 60px 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="particles" id="particles"></div>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-chip">
+    <span class="dot"></span>
+    ESP32-S3 &middot; HX8369A &middot; LVGL
+  </div>
+  <h1>
+    ESP DISPLAY
+    <span>Embedded Graphics System</span>
+  </h1>
+  <p class="hero-desc">
+    800&times;480 LCD &middot; GT911 电容触摸 &middot; LVGL 图形界面<br>
+    基于 ESP32-S3 的高性能嵌入式显示方案
+  </p>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-value">800&times;480</div>
+      <div class="stat-label">Resolution</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">20MHz</div>
+      <div class="stat-label">Pixel Clock</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">8MB</div>
+      <div class="stat-label">App Partition</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">60fps</div>
+      <div class="stat-label">Target</div>
+    </div>
+  </div>
+  <div class="scroll-indicator">
+    SCROLL
+    <div class="arrow"></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Architecture -->
+<section id="architecture">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">// System Architecture</div>
+      <h2 class="section-title">Core Modules</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="arch-grid">
+      <div class="arch-card">
+        <div class="card-icon cyan">&#9618;</div>
+        <div class="card-title">LCD Driver</div>
+        <div class="card-subtitle">esp_lcd_panel_hx8369.c</div>
+        <div class="card-desc">HX8369A 面板驱动，通过 Intel 8080 并行接口（8-bit）与 ESP32-S3 通信，支持 16-bit RGB565 色彩空间。</div>
+      </div>
+      <div class="arch-card">
+        <div class="card-icon purple">&#9670;</div>
+        <div class="card-title">LVGL Graphics</div>
+        <div class="card-subtitle">components/lvgl/</div>
+        <div class="card-desc">LVGL v8.x 图形库，提供丰富的 UI 组件、动画和渲染引擎，双缓冲 PSRAM 分配确保流畅显示。</div>
+      </div>
+      <div class="arch-card">
+        <div class="card-icon green">&#9656;</div>
+        <div class="card-title">Touch Input</div>
+        <div class="card-subtitle">GT9XX + gt911demo.cpp</div>
+        <div class="card-desc">GT911 电容触摸屏驱动，I2C 总线 400kHz 通信，20ms 轮询扫描，支持多点触摸坐标上报。</div>
+      </div>
+      <div class="arch-card">
+        <div class="card-icon blue">&#9635;</div>
+        <div class="card-title">Input Bridge</div>
+        <div class="card-subtitle">lv_port_indev.c</div>
+        <div class="card-desc">将 GT911 触摸事件桥接到 LVGL 输入设备接口，实现触摸坐标到 UI 交互的无缝转换。</div>
+      </div>
+      <div class="arch-card">
+        <div class="card-icon orange">&#9673;</div>
+        <div class="card-title">GUI Task</div>
+        <div class="card-subtitle">lvgl_gui.c</div>
+        <div class="card-desc">FreeRTOS 任务，初始化 LCD 硬件、LVGL 引擎、背光 PWM，运行主事件循环和 UI 渲染。</div>
+      </div>
+      <div class="arch-card">
+        <div class="card-icon cyan">&#9685;</div>
+        <div class="card-title">I2C Host</div>
+        <div class="card-subtitle">myi2c.c</div>
+        <div class="card-desc">I2C 主机驱动初始化，400kHz 时钟频率，为 GT911 触摸控制器提供总线通信基础。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Boot Sequence -->
+<section id="boot">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">// Initialization</div>
+      <h2 class="section-title">Boot Sequence</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="boot-sequence">
+      <div class="boot-step">
+        <div class="boot-marker">
+          <div class="boot-dot active"></div>
+          <div class="boot-line"></div>
+        </div>
+        <div class="boot-content">
+          <div class="boot-step-num">STEP 01</div>
+          <div class="boot-step-title">NVS Flash Init</div>
+          <div class="boot-step-desc">初始化 NVS Flash 存储，处理版本不兼容时自动擦除重建。</div>
+        </div>
+      </div>
+      <div class="boot-step">
+        <div class="boot-marker">
+          <div class="boot-dot active"></div>
+          <div class="boot-line"></div>
+        </div>
+        <div class="boot-content">
+          <div class="boot-step-num">STEP 02</div>
+          <div class="boot-step-title">GT911 Touch Task</div>
+          <div class="boot-step-desc">创建触摸扫描任务（Core 1），初始化 I2C 总线，以 20ms 间隔持续轮询触摸事件。</div>
+        </div>
+      </div>
+      <div class="boot-step">
+        <div class="boot-marker">
+          <div class="boot-dot active"></div>
+          <div class="boot-line"></div>
+        </div>
+        <div class="boot-content">
+          <div class="boot-step-num">STEP 03</div>
+          <div class="boot-step-title">LCD &amp; LVGL Init</div>
+          <div class="boot-step-desc">初始化 Intel 8080 总线、HX8369A 面板、LVGL 库，分配 PSRAM 双缓冲区。</div>
+        </div>
+      </div>
+      <div class="boot-step">
+        <div class="boot-marker">
+          <div class="boot-dot active"></div>
+        </div>
+        <div class="boot-content">
+          <div class="boot-step-num">STEP 04</div>
+          <div class="boot-step-title">UI Render Loop</div>
+          <div class="boot-step-desc">启动背光 PWM，注册输入设备，运行 LVGL widgets demo，进入主事件循环。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Hardware Pins -->
+<section id="pins">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">// Hardware Interface</div>
+      <h2 class="section-title">Pin Mapping</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="pin-section">
+      <div class="pin-grid">
+        <div class="pin-group">
+          <h3>LCD Data Bus</h3>
+          <div class="pin-item"><span class="pin-name">DATA0</span><span class="pin-value">GPIO 46</span></div>
+          <div class="pin-item"><span class="pin-name">DATA1</span><span class="pin-value">GPIO 3</span></div>
+          <div class="pin-item"><span class="pin-name">DATA2</span><span class="pin-value">GPIO 8</span></div>
+          <div class="pin-item"><span class="pin-name">DATA3</span><span class="pin-value">GPIO 18</span></div>
+          <div class="pin-item"><span class="pin-name">DATA4</span><span class="pin-value">GPIO 17</span></div>
+          <div class="pin-item"><span class="pin-name">DATA5</span><span class="pin-value">GPIO 16</span></div>
+          <div class="pin-item"><span class="pin-name">DATA6</span><span class="pin-value">GPIO 15</span></div>
+          <div class="pin-item"><span class="pin-name">DATA7</span><span class="pin-value">GPIO 7</span></div>
+        </div>
+        <div class="pin-group">
+          <h3>LCD Control</h3>
+          <div class="pin-item"><span class="pin-name">PCLK (WR)</span><span class="pin-value">GPIO 10</span></div>
+          <div class="pin-item"><span class="pin-name">CS</span><span class="pin-value">GPIO 12</span></div>
+          <div class="pin-item"><span class="pin-name">DC</span><span class="pin-value">GPIO 11</span></div>
+          <div class="pin-item"><span class="pin-name">RST</span><span class="pin-value">GPIO 9</span></div>
+          <div class="pin-item"><span class="pin-name">Backlight</span><span class="pin-value">GPIO 6</span></div>
+        </div>
+        <div class="pin-group">
+          <h3>Touch I2C</h3>
+          <div class="pin-item"><span class="pin-name">SDA</span><span class="pin-value">GPIO 21</span></div>
+          <div class="pin-item"><span class="pin-name">SCL</span><span class="pin-value">GPIO 14</span></div>
+          <div class="pin-item"><span class="pin-name">Frequency</span><span class="pin-value">400 kHz</span></div>
+          <div class="pin-item"><span class="pin-name">Address</span><span class="pin-value">0x14</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Tech Specs -->
+<section id="specs">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">// Configuration</div>
+      <h2 class="section-title">Tech Specs</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="specs-grid">
+      <div class="spec-item">
+        <div class="spec-icon">&#9726;</div>
+        <div class="spec-label">Target</div>
+        <div class="spec-value">ESP32-S3</div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-icon">&#9632;</div>
+        <div class="spec-label">Display</div>
+        <div class="spec-value">HX8369A</div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-icon">&#9654;</div>
+        <div class="spec-label">Resolution</div>
+        <div class="spec-value">800 &times; 480</div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-icon">&#9679;</div>
+        <div class="spec-label">Color</div>
+        <div class="spec-value">RGB565</div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-icon">&#9733;</div>
+        <div class="spec-label">Touch</div>
+        <div class="spec-value">GT911</div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-icon">&#9881;</div>
+        <div class="spec-label">Interface</div>
+        <div class="spec-value">I80 8-bit</div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-icon">&#9878;</div>
+        <div class="spec-label">Pixel Clock</div>
+        <div class="spec-value">20 MHz</div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-icon">&#9830;</div>
+        <div class="spec-label">App Size</div>
+        <div class="spec-value">8 MB</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- Build -->
+<section id="build">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">// Get Started</div>
+      <h2 class="section-title">Build &amp; Flash</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="terminal-dot r"></div>
+        <div class="terminal-dot y"></div>
+        <div class="terminal-dot g"></div>
+        <span class="terminal-title">TERMINAL</span>
+      </div>
+      <div class="terminal-body">
+        <span class="comment"># Set ESP-IDF environment</span><br>
+        <span class="prompt">$</span> <span class="cmd">. $IDF_PATH/export.sh</span><br><br>
+        <span class="comment"># Build the project</span><br>
+        <span class="prompt">$</span> <span class="cmd">idf.py set-target esp32s3</span><br>
+        <span class="prompt">$</span> <span class="cmd">idf.py build</span><br><br>
+        <span class="comment"># Flash and monitor</span><br>
+        <span class="prompt">$</span> <span class="cmd">idf.py -p /dev/ttyUSB0 flash monitor</span><br>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>ESP Display &mdash; Powered by <a href="https://www.espressif.com/">ESP32-S3</a> &amp; <a href="https://lvgl.io/">LVGL</a></p>
+</footer>
+
+<script>
+// Generate particles
+const container = document.getElementById('particles');
+for (let i = 0; i < 30; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  p.style.left = Math.random() * 100 + '%';
+  p.style.animationDuration = (8 + Math.random() * 12) + 's';
+  p.style.animationDelay = Math.random() * 10 + 's';
+  p.style.width = p.style.height = (1 + Math.random() * 2) + 'px';
+  container.appendChild(p);
+}
+</script>
+</body>
+</html>
